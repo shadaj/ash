@@ -1,0 +1,2 @@
+me.shadaj.ash.spotify
+me.shadaj.ash.motor

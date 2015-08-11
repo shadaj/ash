@@ -1,0 +1,8 @@
+target/
+project/target/
+**/project/project/
+.sass-cache/
+.idea/
+.DS_Store
+logs/
+**/src/gen/
