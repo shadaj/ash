@@ -49,7 +49,7 @@ lazy val ash = crossProject.in(file(".")).
     sourceGenerators in Compile <+= resourceGenerator("gen", "main", Seq("me", "shadaj", "ash"))
   ).
   jvmSettings(
-    libraryDependencies += "me.shadaj" %% "spotify-scala" % "0.1",
+    libraryDependencies += "me.shadaj" %% "spotify-scala" % "0.1.0-SNAPSHOT",
     libraryDependencies += "io.netty" % "netty" % "3.9.2.Final" force(),
     libraryDependencies += ws
   ).
