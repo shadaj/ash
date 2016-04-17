@@ -45,7 +45,7 @@ lazy val ash = crossProject.in(file(".")).
     name := "ash",
     version := "0.1-SNAPSHOT",
     scalaVersion := "2.11.7",
-    libraryDependencies += "me.chrons" %%% "boopickle" % "1.0.0",
+    libraryDependencies += "me.chrons" %%% "boopickle" % "1.1.3",
     sourceGenerators in Compile <+= resourceGenerator("gen", "main", Seq("me", "shadaj", "ash"))
   ).
   jvmSettings(
@@ -54,16 +54,18 @@ lazy val ash = crossProject.in(file(".")).
     libraryDependencies += ws
   ).
   jsSettings(
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.8.0",
-    libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.5.2",
-    libraryDependencies += "com.timushev" %%% "scalatags-rx" % "0.1.0",
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.0",
+    libraryDependencies += "com.github.japgolly.scalajs-react" %%% "core" % "0.11.0",
     libraryDependencies += "me.shadaj" %%% "appa" % "0.1.0-SNAPSHOT",
-    jsDependencies += ProvidedJS / "Vibrant.min.js",
-    preLinkJSEnv := PhantomJSEnv(autoExit = false).value,
-    postLinkJSEnv := PhantomJSEnv(autoExit = false).value,
+    libraryDependencies += "com.payalabs" %%% "scalajs-react-mdl" % "0.2.0-SNAPSHOT",
+    jsDependencies ++= Seq(
+      ProvidedJS / "vibrant.min.js" commonJSName "Vibrant",
+      "org.webjars.bower" % "react" % "15.0.1" / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
+      "org.webjars.bower" % "react" % "15.0.1" / "react-dom.js" minified "react-dom.min.js" dependsOn "react-with-addons.js" commonJSName "ReactDOM"
+    ),
+    jsEnv := PhantomJSEnv(autoExit = false).value,
     persistLauncher in Compile := true
   )
-
 
 lazy val motorRemote = project.in(file("motor-remote")).enablePlugins(AssemblyPlugin).settings(
   scalaVersion := "2.11.6",

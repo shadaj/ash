@@ -7,7 +7,7 @@ import me.shadaj.ash.communication.{ServiceMessenger, PickledMessage}
 import play.api.libs.ws.WS
 import play.api.mvc.WebSocket.FrameFormatter
 import play.api.mvc._
-import boopickle._
+import boopickle.Default._
 import play.api.Play.current
 import scala.concurrent.ExecutionContext.Implicits.global
 

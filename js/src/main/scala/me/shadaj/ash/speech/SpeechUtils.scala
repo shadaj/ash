@@ -12,4 +12,6 @@ object SpeechUtils {
     googleUSEnglish.foreach(speechSynthesis.voice = _)
     SpeechSynthesis.speak(speechSynthesis)
   }
+
+  say("")
 }

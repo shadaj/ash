@@ -1,6 +1,7 @@
 package me.shadaj.ash.communication
 
-import boopickle.{PickleState, Pickle, Unpickle}
+import boopickle.Default._
+import japgolly.scalajs.react._
 import me.shadaj.appa.{Actor, ActorRef}
 
 import scala.collection.mutable
@@ -16,7 +17,7 @@ final class ServiceMessenger(up: ActorRef) extends Actor {
   override def receive: Receive = {
     case PickledMessage(service, data) =>
       val (serializers, actor) = ServiceStore.actors(service)
-      actor ! Unpickle[AnyRef](serializers.unpickler).fromBytes(data)
+      actor ! Unpickle[AnyRef](serializers.pickler).fromBytes(data)
     case data =>
       val service = ServiceStore.serviceForRef(sender())
       val (serializers, _) = ServiceStore.actors(service)
@@ -37,6 +38,7 @@ object ServiceStore {
                  basePackage.ServiceActor().asInstanceOf[Actor])
   }
 
+  val cards: List[ReactComponentU[_, _, _, TopNode]] = actorClasses.map(c => c._2._2.asInstanceOf[Dynamic].card.asInstanceOf[ReactComponentU[_, _, _, TopNode]])
   val actors: Map[String, (Serializers, ActorRef)] = actorClasses.map(c => c._1 -> (c._2._1, c._2._2.ref)).toMap
   val serviceForRef: Map[ActorRef, String] = actors.map(t => t._2._2 -> t._1)
 }

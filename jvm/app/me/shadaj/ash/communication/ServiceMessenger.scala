@@ -1,7 +1,7 @@
 package me.shadaj.ash.communication
 
 import akka.actor.{ActorRef, Props, ActorSystem, Actor}
-import boopickle.{PickleState, Pickle, Unpickle}
+import boopickle.Default.{PickleState, Pickle, Unpickle}
 import me.shadaj.ash.Resources
 
 import scala.collection.mutable
@@ -20,7 +20,7 @@ class ServiceMessenger(up: ActorRef) extends Actor {
   override def receive: Receive = {
     case p@PickledMessage(service, data) =>
       val (serializers, actor) = ServiceStore.actors(service)
-      actor ! Unpickle[AnyRef](serializers.unpickler).fromBytes(data)
+      actor ! Unpickle[AnyRef](serializers.pickler).fromBytes(data)
     case data =>
       val service = ServiceStore.serviceForRef(sender())
       val (serializers, _) = ServiceStore.actors(service)

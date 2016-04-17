@@ -1,15 +1,17 @@
 package me.shadaj.ash.spotify
 
-import boopickle.{CompositePickler, Pickler, Unpickler}
+import boopickle.CompositePickler
+import boopickle.Default._
 import me.shadaj.ash.communication.Serializers
 
-case class SongData(uri: String, imageUrl: String, songName: String, artistName: String)
-case class NewStatus(playing: Boolean, songData: SongData)
-case class NextSong()
-case class PreviousSong()
-case class Play(uri: String)
-case class Pause()
-case class Continue()
+sealed trait SpotifyMessage
+case class SongData(uri: String, imageUrl: String, songName: String, artistName: String) extends SpotifyMessage
+case class NewStatus(playing: Boolean, songData: SongData) extends SpotifyMessage
+case class NextSong() extends SpotifyMessage
+case class PreviousSong() extends SpotifyMessage
+case class Play(uri: String) extends SpotifyMessage
+case class Pause() extends SpotifyMessage
+case class Continue() extends SpotifyMessage
 
 object Serializers extends Serializers {
   val picklerPair = CompositePickler[AnyRef].
@@ -19,6 +21,5 @@ object Serializers extends Serializers {
     addConcreteType[Play].
     addConcreteType[Pause].
     addConcreteType[Continue]
-  override val pickler: Pickler[AnyRef] = picklerPair.pickler
-  override val unpickler: Unpickler[AnyRef] = picklerPair.unpickler
+  override val pickler: Pickler[AnyRef] = picklerPair
 }
