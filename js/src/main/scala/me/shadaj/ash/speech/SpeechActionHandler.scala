@@ -51,6 +51,7 @@ object SpeechActionHandler {
     displayStyle() = "none"
     listening = false
     micButton.style.backgroundColor = "transparent"
+    restart()
   }
 
   private def restart(then: => Unit) = {
@@ -64,23 +65,37 @@ object SpeechActionHandler {
   }
 
   private val ashTriggers = Seq("ash", "OSH", "ok ash", "okay ash", "hey ash")
+  var lastText: String = ""
 
   recognition.onresult = (e: SpeechEvent) => {
     e.results.drop(e.resultIndex).foreach { result =>
       val text = result(0).transcript.trim
+      println(text)
 
       currentText() = text
+      lastText = text
 
-      if (!listening && ashTriggers.contains(text)) {
+      if (!listening && ashTriggers.exists(w => text.sliding(w.size).contains(w))) {
         restart {
           startListening()
+          dom.setTimeout(() => {
+            if (listening) {
+              currentText() = s"FINAL: $lastText"
+              println(s"FINAL $lastText")
+              onMessage(lastText)
+              stopListening()
+              restart()
+            }
+          }, 5000)
         }
       }
 
       if (listening && result.isFinal) {
         currentText() = s"FINAL: $text"
+        println(s"FINAL $text")
         onMessage(text.trim)
         stopListening()
+        restart()
       }
     }
   }
@@ -88,9 +103,8 @@ object SpeechActionHandler {
   recognition.start()
   micButton.onclick = (_: MouseEvent) => {
     if (listening) {
-      restart {
-        stopListening()
-      }
+      stopListening()
+      restart()
     } else {
       startListening()
     }

@@ -51,7 +51,7 @@ object ServiceActor extends Actor {
         ServiceMessenger.current ! NextSong()
       }
 
-      SpeechActionHandler.onPrefix("play next song") { _ =>
+      SpeechActionHandler.onPrefix("play next song", "play the next song") { _ =>
         ServiceMessenger.current ! NextSong()
         inSpeech = true
       }
@@ -60,7 +60,7 @@ object ServiceActor extends Actor {
         ServiceMessenger.current ! PreviousSong()
       }
 
-      SpeechActionHandler.onPrefix("play previous song") { _ =>
+      SpeechActionHandler.onPrefix("play previous song", "play the previous song") { _ =>
         ServiceMessenger.current ! PreviousSong()
         inSpeech = true
       }
