@@ -8,7 +8,7 @@ import org.scalajs.dom.NodeList
 import scala.scalajs.js
 import com.payalabs.scalajs.react.mdl._
 import me.shadaj.ash.communication.ServiceMessenger
-import me.shadaj.ash.speech.{SpeechActionHandler, SpeechComponent}
+import me.shadaj.ash.speech.{SpeechComponent, SpeechDetectorContainer}
 
 object SpotifyCardContainer {
   case class State(image: String, songName: String, artistName: String, playing: Boolean)
@@ -129,29 +129,29 @@ object SpotifyCard {
       )
     }
 
-    SpeechActionHandler.onPrefix("play next song", "play the next song") { _ =>
+    SpeechDetectorContainer.onText("play next song", "play the next song", "skip this song") { _ =>
       $.props.map(_.onNext()).runNow()
       $.modState(_ => PlayNext).runNow()
     }
 
-    SpeechActionHandler.onPrefix("play previous song", "play the previous song", "play the last song") { _ =>
+    SpeechDetectorContainer.onText("play previous song", "play the previous song", "play the last song") { _ =>
       $.props.map(_.onPrevious()).runNow()
       $.props.map(_.onPrevious()).runNow()
       $.modState(_ => PlayPrevious).runNow()
     }
 
-    SpeechActionHandler.onPrefix("what song is this", "what's this song", "what's playing") { _ =>
+    SpeechDetectorContainer.onText("what song is this", "what's this song", "what's playing") { _ =>
       $.modState(_ => WhatSong).runNow()
     }
 
-    SpeechActionHandler.onPrefix("continue the song", "unpause the song") { _ =>
+    SpeechDetectorContainer.onText("continue the song", "unpause the song") { _ =>
       if (!$.props.runNow().playing) {
         $.props.map(_.onPlayPause()).runNow()
         $.modState(_ => Play).runNow()
       }
     }
 
-    SpeechActionHandler.onPrefix("pause the song", "stop the song") { _ =>
+    SpeechDetectorContainer.onText("pause the song", "stop the song") { _ =>
       if ($.props.runNow().playing) {
         $.props.map(_.onPlayPause()).runNow()
         $.modState(_ => Pause).runNow()

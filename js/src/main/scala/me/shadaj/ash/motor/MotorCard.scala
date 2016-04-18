@@ -2,13 +2,11 @@ package me.shadaj.ash.motor
 
 import japgolly.scalajs.react.vdom.all._
 import japgolly.scalajs.react._
-import org.scalajs.dom.html.{Element, Image}
-import org.scalajs.dom.NodeList
 
-import scala.scalajs.js
 import com.payalabs.scalajs.react.mdl._
+
 import me.shadaj.ash.communication.ServiceMessenger
-import me.shadaj.ash.speech.{SpeechActionHandler, SpeechComponent}
+import me.shadaj.ash.speech.{SpeechComponent, SpeechDetectorContainer}
 
 object MotorCardContainer {
   class Backend($: BackendScope[Unit, Boolean]) {
@@ -63,7 +61,7 @@ object MotorCard {
       )
     }
 
-    SpeechActionHandler.onPrefix("toggle rotation", "toggle motor rotation") { _ =>
+    SpeechDetectorContainer.onText("toggle rotation", "toggle motor rotation") { _ =>
       $.props.map(_.toggleRotate()).runNow()
       $.modState(_ => ToggleRotate).runNow()
     }
