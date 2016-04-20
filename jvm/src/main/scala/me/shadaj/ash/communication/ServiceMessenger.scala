@@ -8,8 +8,9 @@ import scala.collection.mutable
 import scala.reflect.runtime.currentMirror
 
 case object Initialize
+case class WithUpstream(up: ActorRef)
 
-class ServiceMessenger(up: ActorRef) extends Actor {
+class ServiceMessenger extends Actor {
   ServiceStore.actors.values.foreach(t => t._2 ! Initialize)
   ServiceMessenger.all.add(self)
 
@@ -21,7 +22,16 @@ class ServiceMessenger(up: ActorRef) extends Actor {
     case p@PickledMessage(service, data) =>
       val (serializers, actor) = ServiceStore.actors(service)
       actor ! Unpickle[AnyRef](serializers.pickler).fromBytes(data)
+    case WithUpstream(up) =>
+      context.become(withUpstream(up))
+  }
+
+  def withUpstream(up: ActorRef): Receive = {
+    case p@PickledMessage(service, data) =>
+      val (serializers, actor) = ServiceStore.actors(service)
+      actor ! Unpickle[AnyRef](serializers.pickler).fromBytes(data)
     case data =>
+      println(data)
       val service = ServiceStore.serviceForRef(sender())
       val (serializers, _) = ServiceStore.actors(service)
       up ! PickledMessage(service, Pickle.intoBytes(data.asInstanceOf[AnyRef])(implicitly[PickleState], serializers.pickler))

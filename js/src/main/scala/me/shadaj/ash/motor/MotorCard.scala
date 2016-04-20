@@ -46,7 +46,7 @@ object MotorCard {
     def render(props: Props, state: SpeechIntent) = {
       import props._
 
-      div(className := "mdl-cell mdl-cell--4-col")(
+      div(className := "mdl-cell mdl-cell--3-col-desktop")(
         div(className := "mdl-card mdl-shadow--4dp", width := "100%")(
           div(className := "mdl-card__supporting-text", width := "100%")(
             h1(textAlign := "center")(if (connected) "Connected!" else "Waiting for Connection")

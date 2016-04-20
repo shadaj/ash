@@ -37,7 +37,7 @@ object SpotifyCardContainer {
   }
 
   val component = ReactComponentB[Props](getClass.getSimpleName)
-    .initialState(State("", "", "", false))
+    .initialState(State("https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/500px-Spotify_logo_without_text.svg.png", "", "", false))
     .renderBackend[Backend]
     .componentDidMount(_.backend.componentDidMount)
     .build
@@ -102,9 +102,9 @@ object SpotifyCard {
     def render(props: Props, state: SpeechIntent) = {
       import props._
 
-      div(className := "mdl-cell mdl-cell--4-col")(
+      div(className := "mdl-cell mdl-cell--3-col-desktop")(
         div(className := "mdl-card mdl-shadow--4dp", width := "100%")(
-          img(className := "vibrant img-responsive", src := s"/img?url=${js.Dynamic.global.encodeURIComponent(image)}"),
+          img(className := "vibrant img-responsive", src := s"/proxy/$image"),
           div(className := "mdl-card__supporting-text", width := "100%")(
             h3(marginBottom := "5px")(songName),
             h4(marginTop := "5px")(artistName)

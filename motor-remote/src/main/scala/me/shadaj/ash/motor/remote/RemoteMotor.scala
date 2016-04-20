@@ -31,7 +31,7 @@ class RemoteMotor extends Actor {
 
   override def receive: Receive = {
     case BroadcastSelf =>
-      val toSend = s"ASH-REMOTE;me.shadaj.ash.motor;${self.path.toStringWithAddress(selfAddress)}"
+      val toSend = s"ASH-REMOTE;me.shadaj.me.shadaj.ash.motor;${self.path.toStringWithAddress(selfAddress)}"
 
       println(s"BROADCAST: $toSend")
 

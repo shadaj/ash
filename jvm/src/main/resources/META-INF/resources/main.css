@@ -1,0 +1,37 @@
+.text-center {
+    text-align: center;
+}
+
+.mdl-button--fab.transparent {
+    background-color: transparent;
+    box-shadow: none;
+}
+
+.img-responsive {
+    width: 100%;
+    height: auto;
+}
+
+.centered {
+    justify-content: center;
+}
+
+.card-container {
+    justify-content: center;
+}
+.card-container .mdl-cell {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.mdl-card__supporting-text > h1, h2, h3, h4 {
+    font-weight: 300;
+}
+
+.mdl-card > * {
+    transition: background-color 0.25s;
+}
+
+#ash-voice {
+    transition: background-color 0.25s;
+}

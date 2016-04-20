@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./ash-logo.png">
+  <img src="./me.shadaj.ash-logo.png">
 </p>
 
 ## Install/Run
@@ -8,7 +8,7 @@ As of now, there are no prebuilt distributions of ASH available. So clone the re
 sbt ashJVM/run
 ```
 
-This will compile the Scala.js client code as well as boot up a Play! server. To use ASH, navigate your browser to http://localhost:9000/fast.
+This will compile the Scala.js client code as well as boot up an Akka-HTTP server. To use ASH, navigate your browser to http://localhost:8080/fast.
 
 ## Built in Services
 + Spotify

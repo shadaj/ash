@@ -30,7 +30,7 @@ class ServiceActor extends Actor {
       val message = new String(packet.getData)
       if (message.startsWith("ASH-REMOTE")) {
         val messageSplit = message.split(';')
-        if (messageSplit(1) == "me.shadaj.ash.motor") {
+        if (messageSplit(1) == "me.shadaj.me.shadaj.ash.motor") {
           val path = akka.actor.ActorPath.fromString(messageSplit.last.trim)
           println(s"Connecting to remote: $path")
           context.actorSelection(path).resolveOne(5 seconds).pipeTo(self)
