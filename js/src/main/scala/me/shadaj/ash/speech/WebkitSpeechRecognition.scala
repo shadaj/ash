@@ -3,10 +3,12 @@ package me.shadaj.ash.speech
 import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSBracketAccess, JSName}
 
+@js.native
 trait SpeechResultData extends js.Object {
   val transcript: String = js.native
 }
 
+@js.native
 trait SpeechResult extends js.Object {
   val isFinal: Boolean = js.native
 
@@ -14,11 +16,13 @@ trait SpeechResult extends js.Object {
   def apply(idx: Int): SpeechResultData = js.native
 }
 
+@js.native
 trait SpeechEvent extends js.Object {
   val resultIndex: Int = js.native
   val results: js.Array[SpeechResult] = js.native
 }
 
+@js.native
 @JSName("webkitSpeechRecognition")
 class WebkitSpeechRecognition extends js.Object {
   var continuous: Boolean = js.native
