@@ -9,9 +9,8 @@ case class Connected() extends MotorMessage
 case class ToggleRotate() extends MotorMessage
 
 object Serializers extends Serializers {
-  val picklerPair = CompositePickler[AnyRef].
+  override val pickler = CompositePickler[AnyRef].
     addConcreteType[Connected].
     addConcreteType[ToggleRotate].
     addConcreteType[String]
-  override val pickler: Pickler[AnyRef] = picklerPair
 }

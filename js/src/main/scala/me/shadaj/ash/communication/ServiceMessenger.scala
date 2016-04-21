@@ -20,15 +20,31 @@ final class ServiceMessenger(up: ActorRef) extends Actor {
     ServiceStore.actors.keys.map(service => service -> new ServerActor(service, self).self).toMap
 
   override def receive: Receive = {
-    case p@PickledMessage(from, to, data) =>
-      val clientActor: ActorRef = ServiceMessenger.serverActor(from)
-      val serializers = ServiceStore.actors(from)._1 // server sends in server language
+    case p@PickledMessage(from, to, protocol, data) =>
+      val serverActor: ActorRef = ServiceMessenger.serverActor(from)
+
+      val serializers = ServiceStore.actors(protocol)._1
       val (_, toActor) = ServiceStore.actors(to)
-      clientActor ! MessageToForward(toActor, Unpickle[AnyRef](serializers.pickler).fromBytes(data))
+
+      serverActor ! MessageToForward(toActor, Unpickle[AnyRef](serializers.pickler).fromBytes(data))
     case MessageToSend(from, toService, msg) =>
       val fromService = ServiceStore.serviceForRef(from)
-      val (serializers, _) = ServiceStore.actors(toService) // server receives in server language
-      up ! PickledMessage(fromService, toService, Pickle.intoBytes(msg.asInstanceOf[AnyRef])(implicitly[PickleState], serializers.pickler))
+
+      val fromSerializers = ServiceStore.actors(fromService)._1
+      val (toSerializers, _) = ServiceStore.actors(toService)
+
+      val fromCan = fromSerializers.pickler.picklers.exists(_._1 == msg.getClass.getName)
+      val toCan = toSerializers.pickler.picklers.exists(_._1 == msg.getClass.getName)
+
+      if (fromCan) {
+        println(s"Sending $msg with protocol of $fromService")
+        up ! PickledMessage(fromService, toService, fromService, Pickle.intoBytes(msg.asInstanceOf[AnyRef])(implicitly[PickleState], fromSerializers.pickler))
+      } else if (toCan) {
+        println(s"Sending $msg with protocol of $toService")
+        up ! PickledMessage(fromService, toService, toService, Pickle.intoBytes(msg.asInstanceOf[AnyRef])(implicitly[PickleState], toSerializers.pickler))
+      } else {
+        println(s"Unknown serializer for message $msg from $fromService to $toService")
+      }
   }
 }
 

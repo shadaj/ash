@@ -14,12 +14,11 @@ case class Pause() extends SpotifyMessage
 case class Continue() extends SpotifyMessage
 
 object Serializers extends Serializers {
-  val picklerPair = CompositePickler[AnyRef].
+  override val pickler = CompositePickler[AnyRef].
     addConcreteType[NewStatus].
     addConcreteType[NextSong].
     addConcreteType[PreviousSong].
     addConcreteType[Play].
     addConcreteType[Pause].
     addConcreteType[Continue].addConcreteType[String]
-  override val pickler: Pickler[AnyRef] = picklerPair
 }

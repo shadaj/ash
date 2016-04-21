@@ -44,7 +44,7 @@ object WebSocketConnection extends JSApp {
     val messenger = new ServiceMessenger(new ActorRef {
       override def actor: Actor = new Actor {
         override def receive: Receive = {
-          case m@PickledMessage(_, _, _) =>
+          case m@PickledMessage(_, _, _, _) =>
             socket.send(Pickle.intoBytes(m).arrayBuffer())
         }
       }
