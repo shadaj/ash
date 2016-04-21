@@ -1,7 +1,7 @@
 package me.shadaj.ash.communication
 
-import akka.actor.{ActorRef, Props, ActorSystem, Actor}
-import boopickle.Default.{PickleState, Pickle, Unpickle}
+import akka.actor.{Actor, ActorRef, ActorSystem, PoisonPill, Props}
+import boopickle.Default.{Pickle, PickleState, Unpickle}
 import me.shadaj.ash.Resources
 
 import scala.collection.mutable
@@ -10,39 +10,56 @@ import scala.reflect.runtime.currentMirror
 case object Initialize
 case class WithUpstream(up: ActorRef)
 
+case class MessageToSend(from: ActorRef, toService: String, msg: Any)
+case class MessageToForward(to: ActorRef, msg: Any)
+
 class ServiceMessenger extends Actor {
   ServiceStore.actors.values.foreach(t => t._2 ! Initialize)
-  ServiceMessenger.all.add(self)
+
+  val clientActors = ServiceStore.actors.keys.map(service => service ->
+    ServiceMessenger.system.actorOf(Props(new ClientActor(service, self)))).toMap
+
+  clientActors.foreach { case (service, ref) =>
+    ServiceMessenger.all(service) = ref :: ServiceMessenger.all.getOrElse(service, List.empty)
+  }
 
   override def postStop() = {
-    ServiceMessenger.all.remove(self)
+    clientActors.foreach { case (service, ref) =>
+      ServiceMessenger.all(service) = ServiceMessenger.all.getOrElse(service, List.empty).filterNot(_ == ref)
+    }
+
+    clientActors.values.foreach(_ ! PoisonPill)
   }
 
   override def receive: Receive = {
-    case p@PickledMessage(service, data) =>
-      val (serializers, actor) = ServiceStore.actors(service)
-      actor ! Unpickle[AnyRef](serializers.pickler).fromBytes(data)
+    case p@PickledMessage(from, to, data) =>
+      val clientActor: ActorRef = clientActors(from)
+      val serializers = ServiceStore.actors(to)._1 // server communicates in server language
+      val (_, toActor) = ServiceStore.actors(to)
+      clientActor ! MessageToForward(toActor, Unpickle[AnyRef](serializers.pickler).fromBytes(data))
     case WithUpstream(up) =>
       context.become(withUpstream(up))
   }
 
   def withUpstream(up: ActorRef): Receive = {
-    case p@PickledMessage(service, data) =>
-      val (serializers, actor) = ServiceStore.actors(service)
-      actor ! Unpickle[AnyRef](serializers.pickler).fromBytes(data)
-    case data =>
-      println(data)
-      val service = ServiceStore.serviceForRef(sender())
-      val (serializers, _) = ServiceStore.actors(service)
-      up ! PickledMessage(service, Pickle.intoBytes(data.asInstanceOf[AnyRef])(implicitly[PickleState], serializers.pickler))
+    case p@PickledMessage(from, to, data) =>
+      val clientActor: ActorRef = clientActors(from)
+      val serializers = ServiceStore.actors(to)._1 // server communicates in server language
+      val (_, toActor) = ServiceStore.actors(to)
+      clientActor ! MessageToForward(toActor, Unpickle[AnyRef](serializers.pickler).fromBytes(data))
+    case MessageToSend(from, toService, msg) =>
+      val fromService = ServiceStore.serviceForRef(from)
+      val (serializers, _) = ServiceStore.actors(fromService) // server communicates in server language
+      up ! PickledMessage(fromService, toService, Pickle.intoBytes(msg.asInstanceOf[AnyRef])(implicitly[PickleState], serializers.pickler))
   }
 }
 
 object ServiceMessenger {
-  val all = mutable.Set[ActorRef]()
+  private[ServiceMessenger] val all = mutable.Map[String, List[ActorRef]]()
+  private[ServiceMessenger] val system = ActorSystem("ash-client-interfaces")
 
-  def broadcast(msg: Any)(implicit from: ActorRef) = {
-    all.foreach(_.tell(msg, from))
+  def broadcast(serviceID: String, msg: Any)(implicit from: ActorRef) = {
+    all(serviceID).foreach(_.tell(msg, from))
   }
 }
 

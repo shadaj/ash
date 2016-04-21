@@ -11,7 +11,7 @@ import me.shadaj.ash.communication.ServiceMessenger
 import me.shadaj.ash.speech.{SpeechComponent, SpeechDetectorContainer}
 
 object SpotifyCardContainer {
-  case class State(image: String, songName: String, artistName: String, playing: Boolean)
+  case class State(image: String, songName: String, artistName: String, isAd: Boolean, playing: Boolean)
   case class Props()
 
 
@@ -19,25 +19,27 @@ object SpotifyCardContainer {
     def componentDidMount: Callback = Callback {
       ServiceActor.subscribe {
         case NewStatus(playing, songData) =>
-          $.modState(s => s.copy(image = songData.imageUrl, songName = songData.songName, artistName = songData.artistName, playing = playing)).runNow()
+          $.modState(s => s.copy(image = songData.imageUrl, songName = songData.songName, artistName = songData.artistName, isAd = songData.uri == "ad", playing = playing)).runNow()
       }
     }
 
     def render(state: State) = {
       implicit val sender = ServiceActor.self
+
+      val serverActor = ServiceMessenger.serverActor("me.shadaj.ash.spotify")
       div(SpotifyCard(
-        state.image, state.songName, state.artistName, state.playing,
-        () => ServiceMessenger.current ! PreviousSong(),
+        state.image, state.songName, state.artistName, state.isAd, state.playing,
+        () => serverActor ! PreviousSong(),
         () => if (state.playing) {
-          ServiceMessenger.current ! Pause()
-        } else ServiceMessenger.current ! Continue(),
-        () => ServiceMessenger.current ! NextSong()
+          serverActor ! Pause()
+        } else serverActor ! Continue(),
+        () => serverActor ! NextSong()
       ))
     }
   }
 
   val component = ReactComponentB[Props](getClass.getSimpleName)
-    .initialState(State("https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/500px-Spotify_logo_without_text.svg.png", "", "", false))
+    .initialState(State("", "Waiting for Update", "", true, false))
     .renderBackend[Backend]
     .componentDidMount(_.backend.componentDidMount)
     .build
@@ -46,7 +48,7 @@ object SpotifyCardContainer {
 }
 
 object SpotifyCard {
-  case class Props(image: String, songName: String, artistName: String, playing: Boolean,
+  case class Props(image: String, songName: String, artistName: String, isAd: Boolean, playing: Boolean,
                    onPrevious: () => Unit, onPlayPause: () => Unit, onNext: () => Unit)
 
   sealed trait SpeechIntent
@@ -103,22 +105,22 @@ object SpotifyCard {
       import props._
 
       div(className := "mdl-cell mdl-cell--3-col-desktop")(
-        div(className := "mdl-card mdl-shadow--4dp", width := "100%")(
-          img(className := "vibrant img-responsive", src := s"/proxy/$image"),
-          div(className := "mdl-card__supporting-text", width := "100%")(
+        div(className := "mdl-card mdl-card-fullwidth mdl-shadow--4dp")(
+          img(className := "vibrant img-responsive", src := (if (isAd) "/spotify-icon.jpeg" else s"/proxy/$image")),
+          div(className := "mdl-card__supporting-text")(
             h3(marginBottom := "5px")(songName),
             h4(marginTop := "5px")(artistName)
           ),
           div(className := "mdl-card__actions mdl-card--border text-center")(
-            button(className := "mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect transparent", onClick --> Callback(onPrevious()))(
+            if (!isAd) button(className := "mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect transparent", onClick --> Callback(onPrevious()))(
               i(className := "material-icons")("skip_previous")
-            ).material,
+            ).material else EmptyTag,
             button(id := "play-pause", className := "mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect", onClick --> Callback(onPlayPause()))(
               if (playing) i(className := "material-icons")("pause") else i(className := "material-icons")("play_arrow")
             ).material,
-            button(className := "mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect transparent", onClick --> Callback(onNext()))(
+            if (!isAd) button(className := "mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect transparent", onClick --> Callback(onNext()))(
               i(className := "material-icons")("skip_next")
-            ).material
+            ).material else EmptyTag
           ),
           SpeechComponent(s"I skipped to $songName by $artistName", (songName, artistName), state == PlayNext, () => $.modState(_ => Empty).runNow()),
           SpeechComponent(s"I went back to $songName by $artistName", (songName, artistName), state == PlayPrevious, () => $.modState(_ => Empty).runNow()),
@@ -165,7 +167,7 @@ object SpotifyCard {
     .componentDidUpdate(_.$.backend.componentDidUpdate)
     .build
 
-  def apply(image: String, songName: String, artistName: String, playing: Boolean,
+  def apply(image: String, songName: String, artistName: String, isAd: Boolean, playing: Boolean,
             onPrevious: () => Unit, onPlayPause: () => Unit, onNext: () => Unit) =
-    component(Props(image, songName, artistName, playing, onPrevious, onPlayPause, onNext))
+    component(Props(image, songName, artistName, isAd, playing, onPrevious, onPlayPause, onNext))
 }

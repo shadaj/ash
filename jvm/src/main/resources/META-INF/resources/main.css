@@ -35,3 +35,11 @@
 #ash-voice {
     transition: background-color 0.25s;
 }
+
+.mdl-card-fullwidth {
+    width: 100%;
+}
+
+.mdl-card-fullwidth > .mdl-card__supporting-text {
+    width: calc(100% - 32px);
+}

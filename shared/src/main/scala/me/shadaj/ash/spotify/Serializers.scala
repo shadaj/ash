@@ -20,6 +20,6 @@ object Serializers extends Serializers {
     addConcreteType[PreviousSong].
     addConcreteType[Play].
     addConcreteType[Pause].
-    addConcreteType[Continue]
+    addConcreteType[Continue].addConcreteType[String]
   override val pickler: Pickler[AnyRef] = picklerPair
 }

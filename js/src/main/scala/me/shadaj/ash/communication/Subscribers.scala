@@ -7,10 +7,13 @@ trait Subscribers[Message] extends Actor {
 
   def messageHandler: Receive
   def receive = {
-    case m: Message =>
-      publish(m)
-      messageHandler(m)
     case o =>
+      try {
+        publish(o.asInstanceOf[Message])
+      } catch {
+        case _: Throwable =>
+      }
+
       messageHandler(o)
   }
 

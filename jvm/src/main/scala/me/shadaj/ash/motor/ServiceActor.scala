@@ -45,7 +45,7 @@ class ServiceActor extends Actor {
       println(s"Connected to remote: $remote")
       context.watch(remote)
       remote ! motor.remote.Hello(self)
-      ServiceMessenger.broadcast(Connected())
+      ServiceMessenger.broadcast("me.shadaj.ash.motor", Connected())
       context.become(connected(remote))
   }
 

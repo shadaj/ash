@@ -25,15 +25,12 @@ object Main extends App {
 
   def websocketFlow: Flow[Message, Message, Any] = {
     val messenger = system.actorOf(Props[ServiceMessenger])
-    val byteStringToPicled = Flow[ByteString].map { bytes =>
-      Unpickle[PickledMessage].fromBytes(ByteBuffer.wrap(bytes.toArray[Byte]))
-    }
 
-    val binaryMessageDecoder = Framing.simpleFramingProtocol(1024 * 10000)
     val toMessenger =
-      Flow[Message].map {
-        case msg: BinaryMessage.Strict =>
-          Unpickle[PickledMessage].fromBytes(ByteBuffer.wrap(msg.data.toArray[Byte]))
+      Flow[Message].filter(_.isInstanceOf[BinaryMessage.Strict]).map { msg =>
+        Unpickle[PickledMessage].fromBytes(ByteBuffer.wrap(
+          msg.asInstanceOf[BinaryMessage.Strict].data.toArray[Byte]
+        ))
       }.to(Sink.actorRef(messenger, PoisonPill))
 
     val fromMessenger =

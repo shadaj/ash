@@ -21,7 +21,7 @@ object MotorCardContainer {
       implicit val sender = ServiceActor.self
       div(MotorCard(
         state,
-        () => ServiceMessenger.current ! ToggleRotate()
+        () => ServiceMessenger.serverActor("me.shadaj.ash.motor") ! ToggleRotate()
       ))
     }
   }
@@ -47,8 +47,8 @@ object MotorCard {
       import props._
 
       div(className := "mdl-cell mdl-cell--3-col-desktop")(
-        div(className := "mdl-card mdl-shadow--4dp", width := "100%")(
-          div(className := "mdl-card__supporting-text", width := "100%")(
+        div(className := "mdl-card mdl-card-fullwidth mdl-shadow--4dp")(
+          div(className := "mdl-card__supporting-text")(
             h1(textAlign := "center")(if (connected) "Connected!" else "Waiting for Connection")
           ),
           div(className := "mdl-card__actions mdl-card--border text-center")(

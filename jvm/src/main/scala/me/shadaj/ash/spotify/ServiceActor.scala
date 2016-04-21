@@ -40,9 +40,8 @@ class ServiceActor extends Actor {
         SpotifyLocal.statusChange(oauth, csrf, 5).pipeTo(self)
       case Left(s: Status) =>
         SpotifyLocal.statusChange(oauth, csrf, 5).pipeTo(self)
-        println(s"new status $s")
-        val message = if (s.track.album_resource.uri.isDefined) {
-          val albumURI = s.track.album_resource.uri.get
+        val message = if (s.track.album_resource.isDefined) {
+          val albumURI = s.track.album_resource.get.uri.get
           Http(url(s"https://api.spotify.com/v1/albums/${albumURI.split(':')(2)}")).map { r =>
             val responseJSON = Json.parse(r.getResponseBody)
             val imageUrl = ((responseJSON \ "images").as[Array[JsObject]].head \ "url").as[String]
@@ -50,9 +49,9 @@ class ServiceActor extends Actor {
             NewStatus(
               s.playing,
               SongData(
-                s.track.track_resource.uri.getOrElse(""),
+                s.track.track_resource.get.uri.getOrElse(""),
                 imageUrl,
-                s.track.track_resource.name.getOrElse(""),
+                s.track.track_resource.get.name.getOrElse(""),
                 artist
               )
             )
@@ -61,15 +60,14 @@ class ServiceActor extends Actor {
           Future.successful(NewStatus(
             s.playing,
             SongData(
-              s.track.track_resource.uri.getOrElse(""),
-              // TODO: replace with self-hosted image
-              "http://a3.mzstatic.com/us/r30/Purple1/v4/bf/2a/9b/bf2a9b24-6ffb-030d-8dac-5e1748304049/icon320x320.jpeg",
-              s.track.track_resource.name.getOrElse(""),
-              s.track.artist_resource.name.getOrElse("")
+              "ad",
+              "",
+              "Advertisement",
+              "Spotify"
             )
           ))
         }
-        message.foreach(ServiceMessenger.broadcast)
+        message.foreach(ServiceMessenger.broadcast("me.shadaj.ash.spotify", _))
 
       case NextSong() =>
         Seq("osascript", "-e", """tell application "Spotify" to next track""").!!

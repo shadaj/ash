@@ -10,27 +10,34 @@ import me.shadaj.ash.Resources
 
 case object Initialize
 
+case class MessageToSend(from: ActorRef, toService: String, msg: Any)
+case class MessageToForward(to: ActorRef, msg: Any)
+
 final class ServiceMessenger(up: ActorRef) extends Actor {
   ServiceStore.actors.values.foreach(t => t._2 ! Initialize)
-  ServiceMessenger._cur = self
+
+  ServiceMessenger._serverActors =
+    ServiceStore.actors.keys.map(service => service -> new ServerActor(service, self).self).toMap
 
   override def receive: Receive = {
-    case PickledMessage(service, data) =>
-      val (serializers, actor) = ServiceStore.actors(service)
-      actor ! Unpickle[AnyRef](serializers.pickler).fromBytes(data)
-    case data =>
-      val service = ServiceStore.serviceForRef(sender())
-      val (serializers, _) = ServiceStore.actors(service)
-      up ! PickledMessage(service, Pickle.intoBytes(data.asInstanceOf[AnyRef])(implicitly[PickleState], serializers.pickler))
+    case p@PickledMessage(from, to, data) =>
+      val clientActor: ActorRef = ServiceMessenger.serverActor(from)
+      val serializers = ServiceStore.actors(from)._1 // server sends in server language
+      val (_, toActor) = ServiceStore.actors(to)
+      clientActor ! MessageToForward(toActor, Unpickle[AnyRef](serializers.pickler).fromBytes(data))
+    case MessageToSend(from, toService, msg) =>
+      val fromService = ServiceStore.serviceForRef(from)
+      val (serializers, _) = ServiceStore.actors(toService) // server receives in server language
+      up ! PickledMessage(fromService, toService, Pickle.intoBytes(msg.asInstanceOf[AnyRef])(implicitly[PickleState], serializers.pickler))
   }
 }
 
 object ServiceMessenger {
-  private[ServiceMessenger] var _cur: ActorRef = null
-  def current: ActorRef = _cur
+  private[ServiceMessenger] var _serverActors: Map[String, ActorRef] = null
+  def serverActor(id: String): ActorRef = _serverActors(id)
 }
 
-object ServiceStore {
+private[communication] object ServiceStore {
   val lines = Resources.services
   private val actorClasses = lines.map { l =>
     val basePackage = Dynamic.global.eval(l)
